@@ -1,26 +1,202 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   AICOMIC DESIGN SYSTEM - MINIMALISM STYLE
+   ============================================
+   Style: Minimalism & Swiss Style
+   Background: Pure White (#ffffff)
+   Text: Dark Gray (#1f2937 / gray-800)
+   Primary: Blue (#2563EB / blue-600)
+   Typography: Inter (Sans-serif)
+   Corners: rounded-lg (0.5rem / 8px)
+   Shadows: Subtle elevation
+   ============================================ */
 
 @theme inline {
+  /* Typography - Inter Font */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  
+  /* Border Radius - Consistent rounded-lg */
+  --radius-sm: 0.25rem;   /* 4px - small elements */
+  --radius-md: 0.375rem;  /* 6px - medium elements */
+  --radius-lg: 0.5rem;    /* 8px - cards, buttons (default) */
+  --radius-xl: 0.75rem;   /* 12px - large containers */
+  
+  /* Colors - Design Tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* ============================================
+     LIGHT MODE (Default) - Minimalism
+     ============================================ */
+  
+  /* Base Colors */
+  --background: #ffffff;           /* Pure white background */
+  --foreground: #1f2937;           /* Dark gray text (gray-800) - 7:1 contrast */
+  
+  /* Primary - Blue Accent */
+  --primary: #2563eb;              /* Blue-600 */
+  --primary-foreground: #ffffff;   /* White text on blue */
+  
+  /* Secondary - Light Gray */
+  --secondary: #f3f4f6;            /* Gray-100 */
+  --secondary-foreground: #1f2937; /* Dark gray text */
+  
+  /* Muted - Subtle backgrounds */
+  --muted: #f9fafb;                /* Gray-50 */
+  --muted-foreground: #6b7280;     /* Gray-500 - readable muted text */
+  
+  /* Accent - Lighter blue for highlights */
+  --accent: #eff6ff;               /* Blue-50 */
+  --accent-foreground: #1e40af;    /* Blue-800 */
+  
+  /* Destructive - Red for errors */
+  --destructive: #dc2626;          /* Red-600 */
+  
+  /* Borders & Inputs */
+  --border: #e5e7eb;               /* Gray-200 - visible borders */
+  --input: #e5e7eb;                /* Gray-200 */
+  --ring: #2563eb;                 /* Blue-600 focus ring */
+  
+  /* Cards */
+  --card: #ffffff;                 /* White card background */
+  --card-foreground: #1f2937;      /* Dark gray text */
+  
+  /* Popovers */
+  --popover: #ffffff;              /* White */
+  --popover-foreground: #1f2937;   /* Dark gray */
+}
+
+@layer base {
+  /* ============================================
+     BASE STYLES - Reset & Defaults
+     ============================================ */
+  
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  
+  body {
+    @apply bg-background text-foreground;
+    @apply font-sans antialiased;
+    /* Smooth font rendering for minimalism */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* ============================================
+     TYPOGRAPHY HIERARCHY
+     ============================================ */
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-foreground;
+    letter-spacing: -0.02em; /* Tighter tracking for headings */
+  }
+  
+  h1 {
+    @apply text-4xl md:text-5xl;
+    line-height: 1.2;
+  }
+  
+  h2 {
+    @apply text-3xl md:text-4xl;
+    line-height: 1.3;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl;
+    line-height: 1.4;
+  }
+  
+  h4 {
+    @apply text-xl md:text-2xl;
+    line-height: 1.4;
+  }
+  
+  p {
+    @apply text-base leading-relaxed;
+  }
+  
+  /* ============================================
+     CARD COMPONENT STYLES
+     ============================================ */
+  
+  .card {
+    @apply bg-card text-card-foreground rounded-lg;
+    /* Subtle shadow for depth - Minimalism principle */
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+  
+  .card:hover {
+    @apply cursor-pointer;
+    /* Smooth elevation on hover */
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transition: box-shadow 200ms ease-in-out;
+  }
+  
+  /* ============================================
+     BUTTON STYLES
+     ============================================ */
+  
+  .btn-primary {
+    @apply bg-primary text-primary-foreground rounded-lg;
+    @apply px-4 py-2 font-medium;
+    @apply transition-colors duration-200;
+    @apply cursor-pointer;
+  }
+  
+  .btn-primary:hover {
+    @apply opacity-90;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground rounded-lg;
+    @apply px-4 py-2 font-medium;
+    @apply transition-colors duration-200;
+    @apply cursor-pointer;
+  }
+  
+  .btn-secondary:hover {
+    @apply bg-gray-200;
+  }
+  
+  /* ============================================
+     UTILITY CLASSES
+     ============================================ */
+  
+  /* Container with consistent padding */
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Smooth transitions for interactive elements */
+  .transition-smooth {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  /* Focus visible for accessibility */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
 }
