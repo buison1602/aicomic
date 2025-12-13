@@ -5,6 +5,8 @@ import { stories, chapters, chapterPages } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { uploadChapterImages } from '@/lib/r2-upload';
 
+export const runtime = 'edge';
+
 export async function POST(req: NextRequest) {
   try {
     const db = getDb();

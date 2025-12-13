@@ -10,6 +10,8 @@ import { AlertCircle, Upload, X, ImageIcon } from 'lucide-react';
 import { getStoryBySlug, createChapter } from './actions';
 import { compressImages } from '@/lib/image-compression';
 
+export const runtime = 'edge';
+
 export default function DangChapTruyenPage() {
   const params = useParams();
   const router = useRouter();

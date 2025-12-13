@@ -2,6 +2,8 @@ import { getChapterPages } from "./actions"
 import { notFound } from "next/navigation"
 import ChapterReader from "./ChapterReader"
 
+export const runtime = 'edge';
+
 interface ChapterPageProps {
   params: Promise<{
     slug: string

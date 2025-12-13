@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen, User, CheckCircle2, Tag } from "lucide-react"
 import { getStoryBySlug } from "./actions"
+
+export const runtime = 'edge';
+
 import { notFound } from "next/navigation"
 
 interface ComicPageProps {
