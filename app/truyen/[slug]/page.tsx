@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen, User, CheckCircle2, Tag } from "lucide-react"
 import { getStoryBySlug } from "./actions"
-
-export const runtime = 'edge';
-
 import { notFound } from "next/navigation"
+
+// Thêm dòng này để chạy trên Cloudflare Pages
+export const runtime = 'edge';
 
 interface ComicPageProps {
   params: Promise<{
@@ -25,8 +25,8 @@ export default async function ComicDetailPage({ params }: ComicPageProps) {
     notFound()
   }
 
-  // Parse genres from string to array
-  const genres = story.genres ? story.genres.split(",").map(g => g.trim()) : []
+  // Sửa lỗi 1: Khai báo rõ (g: string)
+  const genres = story.genres ? story.genres.split(",").map((g: string) => g.trim()) : []
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -67,7 +67,8 @@ export default async function ComicDetailPage({ params }: ComicPageProps) {
                   <Tag className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <span className="text-muted-foreground">Thể loại:</span>
                   <div className="flex flex-wrap gap-2">
-                    {genres.map((genre, index) => (
+                    {/* Sửa lỗi 2: Khai báo rõ (genre: string, index: number) */}
+                    {genres.map((genre: string, index: number) => (
                       <span key={index} className="px-2 py-1 bg-muted rounded text-xs font-medium">
                         {genre}
                       </span>
@@ -105,7 +106,8 @@ export default async function ComicDetailPage({ params }: ComicPageProps) {
           <Card>
             <CardContent className="p-4">
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {chapters.map((chapter, index) => (
+                {/* Sửa lỗi 3: Khai báo rõ (chapter: any, index: number) */}
+                {chapters.map((chapter: any, index: number) => (
                   <Link
                     key={chapter.id}
                     href={`/truyen/${slug}/${index + 1}`}
