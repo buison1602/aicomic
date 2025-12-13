@@ -166,24 +166,24 @@ export async function getUserStories() {
       .all();
 
     // Map to flat structure with chapter count
-    const flatResult = result.map(row => ({
+    const flatResult = result.map((row: any) => ({
       id: row.stories.id,
       slug: row.stories.slug,
       title: row.stories.title,
       thumbnailUrl: row.stories.thumbnailUrl,
       createdAt: row.stories.createdAt,
-      chapterCount: result.filter(r => r.stories.id === row.stories.id && r.chapters !== null).length,
+      chapterCount: result.filter((r: any) => r.stories.id === row.stories.id && r.chapters !== null).length,
     }));
 
     // Remove duplicates and count chapters properly
     const uniqueStories = Array.from(
-      new Map(flatResult.map(story => [story.id, story])).values()
+      new Map(flatResult.map((story: any) => [story.id, story])).values()
     );
 
     // Recalculate chapter count for each unique story
-    const storiesWithCount = uniqueStories.map(story => {
+    const storiesWithCount = uniqueStories.map((story: any) => {
       const chapterCount = result.filter(
-        r => r.stories.id === story.id && r.chapters !== null
+        (r: any) => r.stories.id === story.id && r.chapters !== null
       ).length;
       return { ...story, chapterCount };
     });

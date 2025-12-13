@@ -30,10 +30,10 @@ async function fetchStoriesFromDb() {
     .from(stories)
     .all()
 
-  return allStories.map((story) => {
+  return allStories.map((story: any) => {
     // Parse genres and convert Vietnamese → English
-    const genresVn = story.genres ? story.genres.split(',').map(g => g.trim()) : []
-    const genresEn = genresVn.map(vn => genreVnToEn[vn] || vn) // Convert or keep original if not found
+    const genresVn = story.genres ? story.genres.split(',').map((g: any) => g.trim()) : []
+    const genresEn = genresVn.map((vn: any) => genreVnToEn[vn] || vn) // Convert or keep original if not found
     
     return {
       id: story.id,

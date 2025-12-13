@@ -21,7 +21,7 @@ export async function getRandomStories(limit: number = 12) {
     // Map to flat structure with chapter count
     const uniqueStories = new Map();
     
-    result.forEach(row => {
+    result.forEach((row: any) => {
       const storySlug = row.stories.slug;
       if (!uniqueStories.has(storySlug)) {
         uniqueStories.set(storySlug, {
@@ -71,7 +71,7 @@ export async function getRecentlyUpdatedStories(limit: number = 12) {
     // Map and calculate chapter count
     const storiesMap = new Map();
     
-    result.forEach(row => {
+    result.forEach((row: any) => {
       const storySlug = row.stories.slug;
       if (!storiesMap.has(storySlug)) {
         storiesMap.set(storySlug, {
@@ -122,7 +122,7 @@ export async function getTopStories(limit: number = 4) {
     // Map and count chapters
     const storiesMap = new Map();
     
-    result.forEach(row => {
+    result.forEach((row: any) => {
       const storySlug = row.stories.slug;
       if (!storiesMap.has(storySlug)) {
         storiesMap.set(storySlug, {
