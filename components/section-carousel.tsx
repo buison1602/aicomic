@@ -12,7 +12,7 @@ interface SectionCarouselProps {
   icon: LucideIcon
   items: any[]
   viewAllLink?: string
-  renderCard: (item: any) => React.ReactNode
+  renderCard: (item: any, index: number) => React.ReactNode
   className?: string
   cardWidth?: string
   gap?: string
@@ -104,13 +104,13 @@ export function SectionCarousel({
         className="w-full"
       >
         <CarouselContent className={cn("-ml-3", gap)}>
-          {items.map((item) => (
+          {items.map((item, index) => (
             <CarouselItem
               key={item.id}
               className="pl-3"
               style={{ flexBasis: cardWidth }}
             >
-              {renderCard(item)}
+              {renderCard(item, index)}
             </CarouselItem>
           ))}
         </CarouselContent>

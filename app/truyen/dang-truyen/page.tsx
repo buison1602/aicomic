@@ -1,16 +1,20 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookPlus, AlertCircle, Check } from "lucide-react"
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useSession } from 'next-auth/react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BookPlus, AlertCircle, Check } from 'lucide-react';
+import { LoginDialog } from '@/components/login-dialog';
+import { createStory, getUserStories } from './actions';
+import { compressImage } from '@/lib/image-compression';
 
 const genres = [
   "Hành động",
@@ -28,12 +32,14 @@ const genres = [
 ]
 
 export default function DangTruyenPage() {
+  const { data: session, status } = useSession();
   const [formData, setFormData] = useState({
     name: "",
     author: "",
     status: "",
     genres: [] as string[],
     description: "",
+    thumbnail: null as File | null,
   })
 
   const [errors, setErrors] = useState<{
@@ -42,6 +48,7 @@ export default function DangTruyenPage() {
     status?: string
     genres?: string
     description?: string
+    thumbnail?: string
   }>({})
 
   const [touched, setTouched] = useState<{
@@ -50,6 +57,7 @@ export default function DangTruyenPage() {
     status?: boolean
     genres?: boolean
     description?: boolean
+    thumbnail?: boolean
   }>({})
 
   const validateName = (value: string) => {
@@ -81,6 +89,24 @@ export default function DangTruyenPage() {
     return undefined
   }
 
+  const validateThumbnail = (file: File | null) => {
+    if (!file) return "Vui lòng chọn ảnh đại diện truyện"
+    
+    // Check file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      return "Chỉ chấp nhận file ảnh JPG, PNG hoặc WEBP"
+    }
+    
+    // Check file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      return "Kích thước file không được vượt quá 5MB"
+    }
+    
+    return undefined
+  }
+
   const handleFieldBlur = (field: keyof typeof touched) => {
     setTouched((t) => ({ ...t, [field]: true }))
     
@@ -101,6 +127,9 @@ export default function DangTruyenPage() {
       case "description":
         error = validateDescription(formData.description)
         break
+      case "thumbnail":
+        error = validateThumbnail(formData.thumbnail)
+        break
     }
     
     setErrors((e) => ({ ...e, [field]: error }))
@@ -120,7 +149,32 @@ export default function DangTruyenPage() {
     })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [userStories, setUserStories] = useState<Array<{
+    id: number;
+    slug: string;
+    title: string;
+    thumbnailUrl: string | null;
+    createdAt: string | null;
+    chapterCount: number;
+  }>>([]);
+  const [isLoadingStories, setIsLoadingStories] = useState(true);
+
+  // Fetch user stories on mount
+  useEffect(() => {
+    async function fetchStories() {
+      setIsLoadingStories(true);
+      const result = await getUserStories();
+      if (result.success) {
+        setUserStories(result.stories);
+      }
+      setIsLoadingStories(false);
+    }
+    fetchStories();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // Validate all fields
@@ -130,6 +184,7 @@ export default function DangTruyenPage() {
       status: validateStatus(formData.status),
       genres: validateGenres(formData.genres),
       description: validateDescription(formData.description),
+      thumbnail: validateThumbnail(formData.thumbnail),
     }
 
     setTouched({
@@ -138,6 +193,7 @@ export default function DangTruyenPage() {
       status: true,
       genres: true,
       description: true,
+      thumbnail: true,
     })
 
     setErrors(newErrors)
@@ -147,17 +203,88 @@ export default function DangTruyenPage() {
       return
     }
 
-    console.log("Form submitted:", formData)
-    // Handle form submission
+    setIsSubmitting(true);
+    setSubmitMessage(null);
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.set('title', formData.name);
+      formDataToSend.set('author', formData.author);
+      formDataToSend.set('status', formData.status);
+      formDataToSend.set('genres', formData.genres.join(','));
+      formDataToSend.set('description', formData.description);
+      
+      // Add thumbnail file
+      if (formData.thumbnail) {
+        formDataToSend.set('thumbnail', formData.thumbnail);
+      }
+
+      const result = await createStory(formDataToSend);
+      
+      if (result.success) {
+        setSubmitMessage({ type: 'success', text: result.message });
+        // Reset form
+        setFormData({
+          name: '',
+          author: '',
+          status: '',
+          genres: [],
+          description: '',
+          thumbnail: null,
+        });
+        setTouched({});
+        setErrors({});
+        
+        // Reload stories list
+        const storiesResult = await getUserStories();
+        if (storiesResult.success) {
+          setUserStories(storiesResult.stories);
+        }
+      } else {
+        setSubmitMessage({ type: 'error', text: result.message });
+      }
+    } catch (error) {
+      setSubmitMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Đã xảy ra lỗi',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
-  // Mock data for user's posted comics
-  const userComics = Array.from({ length: 30 }, (_, i) => ({
-    id: i + 1,
-    title: `Truyện của tôi ${i + 1}`,
-    chapters: Math.floor(Math.random() * 50) + 1,
-    cover: "/images/daicongtu.jfif",
-  }))
+
+
+  // Show loading state
+  if (status === 'loading') {
+    return (
+      <main className="min-h-screen bg-background py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-muted-foreground">Đang tải...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // Show login prompt if not authenticated
+  if (!session) {
+    return (
+      <main className="min-h-screen bg-background py-12">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-card rounded-lg shadow-sm border border-border p-8 text-center">
+            <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-semibold text-foreground mb-2">
+              Yêu cầu đăng nhập
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Bạn cần đăng nhập để đăng truyện và quản lý nội dung của mình
+            </p>
+            <LoginDialog />
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background py-12">
@@ -366,26 +493,119 @@ export default function DangTruyenPage() {
                   </div>
                 </div>
 
+                {/* Thumbnail Upload */}
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                    Ảnh đại diện truyện <span className="text-destructive">*</span>
+                  </h2>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="thumbnail" className="text-sm font-medium text-foreground">
+                      Chọn ảnh (JPG, PNG, WEBP - Tối đa 5MB)
+                    </Label>
+                    <Input
+                      id="thumbnail"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0] || null;
+                        
+                        if (file) {
+                          // Compress thumbnail on client
+                          const compressedFile = await compressImage(file, {
+                            maxSizeMB: 0.5, // 500KB for thumbnail
+                            maxWidthOrHeight: 800,
+                          });
+                          setFormData({ ...formData, thumbnail: compressedFile });
+                          if (touched.thumbnail) {
+                            setErrors((err) => ({ ...err, thumbnail: validateThumbnail(compressedFile) }));
+                          }
+                        } else {
+                          setFormData({ ...formData, thumbnail: null });
+                        }
+                      }}
+                      onBlur={() => handleFieldBlur("thumbnail")}
+                      className={`rounded-lg border transition-colors duration-200 cursor-pointer
+                        ${touched.thumbnail && errors.thumbnail 
+                          ? "border-destructive focus:border-destructive focus:ring-destructive" 
+                          : "border-border focus:border-primary focus:ring-primary"
+                        }`}
+                    />
+                    
+                    {/* Preview thumbnail */}
+                    {formData.thumbnail && (
+                      <div className="mt-3 flex items-start gap-3">
+                        <div className="relative w-32 h-40 rounded-lg overflow-hidden border border-border">
+                          <Image
+                            src={URL.createObjectURL(formData.thumbnail)}
+                            alt="Preview"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 text-sm text-muted-foreground">
+                          <p className="font-medium text-foreground">{formData.thumbnail.name}</p>
+                          <p>{(formData.thumbnail.size / 1024 / 1024).toFixed(2)} MB</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setFormData({ ...formData, thumbnail: null });
+                              setErrors((err) => ({ ...err, thumbnail: validateThumbnail(null) }));
+                            }}
+                            className="mt-2"
+                          >
+                            Xóa ảnh
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {touched.thumbnail && errors.thumbnail && (
+                      <div className="flex items-start gap-2 text-sm text-destructive">
+                        <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <span>{errors.thumbnail}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Submit Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-border">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => window.history.back()}
+                    disabled={isSubmitting}
                     className="order-2 sm:order-1 rounded-lg transition-colors duration-200 cursor-pointer"
                   >
                     Hủy
                   </Button>
                   <Button
                     type="submit"
+                    disabled={isSubmitting}
                     className="order-1 sm:order-2 sm:ml-auto w-full sm:w-auto bg-primary text-primary-foreground 
                       rounded-lg px-8 py-6 text-base font-medium transition-colors duration-200 cursor-pointer 
-                      hover:opacity-90"
+                      hover:opacity-90 disabled:opacity-50"
                   >
                     <BookPlus className="w-5 h-5 mr-2" />
-                    Đăng truyện
+                    {isSubmitting ? 'Đang xử lý...' : 'Đăng truyện'}
                   </Button>
                 </div>
+
+                {/* Submit Message */}
+                {submitMessage && (
+                  <div
+                    className={`p-4 rounded-lg border ${
+                      submitMessage.type === 'success'
+                        ? 'bg-green-50 border-green-200 text-green-800'
+                        : 'bg-red-50 border-red-200 text-red-800'
+                    }`}
+                  >
+                    {submitMessage.text}
+                  </div>
+                )}
               </form>
             </div>
         </div>        {/* User's Posted Comics */}
@@ -399,39 +619,49 @@ export default function DangTruyenPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-            {userComics.map((comic) => (
-              <Link 
-                key={comic.id} 
-                href="/truyen/dang-chap-truyen" 
-                className="group cursor-pointer"
-              >
-                <div className="bg-card rounded-lg shadow-sm hover:shadow-md transition-smooth overflow-hidden">
-                  {/* Cover Image */}
-                  <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-                    <Image
-                      src={comic.cover || "/placeholder.svg"}
-                      alt={comic.title}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
+          {isLoadingStories ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Đang tải truyện...
+            </div>
+          ) : userStories.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Bạn chưa đăng truyện nào. Hãy đăng truyện đầu tiên!
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+              {userStories.map((story) => (
+                <Link 
+                  key={story.id} 
+                  href={`/truyen/dang-chap-truyen/${story.slug}`}
+                  className="group cursor-pointer"
+                >
+                  <div className="bg-card rounded-lg shadow-sm hover:shadow-md transition-smooth overflow-hidden">
+                    {/* Cover Image */}
+                    <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+                      <Image
+                        src={story.thumbnailUrl || "/images/daicongtu.jfif"}
+                        alt={story.title}
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
 
-                  {/* Card Content */}
-                  <div className="p-3 space-y-1.5">
-                    <h3 className="font-semibold text-sm text-foreground line-clamp-2 leading-snug 
-                      group-hover:text-primary transition-colors duration-200 min-h-[2.5rem]">
-                      {comic.title}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">
-                      {comic.chapters} chương
-                    </p>
+                    {/* Card Content */}
+                    <div className="p-3 space-y-1.5">
+                      <h3 className="font-semibold text-sm text-foreground line-clamp-2 leading-snug 
+                        group-hover:text-primary transition-colors duration-200 min-h-[2.5rem]">
+                        {story.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {story.chapterCount} chương
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </main>

@@ -13,8 +13,21 @@ import {
   RecommendedCard,
   EditorChoiceCard,
 } from "@/components/comic-cards"
+import { getRandomStories, getRecentlyUpdatedStories, getTopStories } from "./actions"
 
-// Hero carousel slides
+// Types for stories from database
+type Story = {
+  id: number;
+  slug: string;
+  title: string;
+  author: string | null;
+  thumbnailUrl: string | null;
+  genres: string | null;
+  status: string | null;
+  chapterCount: number;
+};
+
+// Hero carousel slides - keeping static for now
 const heroSlides = [
   {
     id: 1,
@@ -39,120 +52,6 @@ const heroSlides = [
   },
 ]
 
-// Top 4 trending comics with ratings
-const topTrending = [
-  {
-    id: 1,
-    rank: 1,
-    title: "Thiên Ma Quỷ Hoàn",
-    slug: "thien-ma-quy-hoan",
-    coverImage: "/images/daicongtu.jfif",
-    rating: 4.9,
-    views: "125M",
-  },
-  {
-    id: 2,
-    rank: 2,
-    title: "One Piece",
-    slug: "one-piece",
-    coverImage: "/images/daicongtu.jfif",
-    rating: 4.8,
-    views: "110M",
-  },
-  {
-    id: 3,
-    rank: 3,
-    title: "Naruto Shippuden",
-    slug: "naruto",
-    coverImage: "/images/daicongtu.jfif",
-    rating: 4.7,
-    views: "98M",
-  },
-  {
-    id: 4,
-    rank: 4,
-    title: "Attack on Titan",
-    slug: "aot",
-    coverImage: "/images/daicongtu.jfif",
-    rating: 4.6,
-    views: "85M",
-  },
-]
-
-// Generate comics data
-const featuredComics = Array.from({ length: 12 }, (_, i) => ({
-  id: i + 1,
-  title: i === 0 ? "Thiên Ma Quỷ Hoàn" : `Comic Title ${i + 1}`,
-  slug: i === 0 ? "thien-ma-quy-hoan" : `comic-${i + 1}`,
-  coverImage: "/images/daicongtu.jfif",
-  latestChapter: 25 - i,
-  timestamp:
-    i % 5 === 0
-      ? "0 phút trước"
-      : i % 5 === 1
-        ? "5 phút trước"
-        : i % 5 === 2
-          ? "6 giờ trước"
-          : i % 5 === 3
-            ? "24-11-2025"
-            : "23-11-2025",
-}))
-
-const topComics = Array.from({ length: 10 }, (_, i) => ({
-  id: i + 1,
-  title: i === 0 ? "One Piece" : `Top Comic ${i + 1}`,
-  slug: `top-comic-${i + 1}`,
-  coverImage: "/images/daicongtu.jfif",
-  views: `${(100 - i * 5).toFixed(1)}M`,
-  rating: (5 - i * 0.1).toFixed(1),
-}))
-
-const newUpdates = Array.from({ length: 12 }, (_, i) => ({
-  id: i + 1,
-  title: `Comic Update ${i + 1}`,
-  slug: `comic-update-${i + 1}`,
-  coverImage: "/images/daicongtu.jfif",
-  rating: (4.5 - i * 0.1).toFixed(1),
-  chapters: [
-    {
-      number: 100 - i,
-      timestamp: i === 0 ? "2 phút trước" : i === 1 ? "5 phút trước" : i === 2 ? "10 phút trước" : `${i * 15} phút trước`,
-    },
-    {
-      number: 99 - i,
-      timestamp: i % 2 === 0 ? "1 giờ trước" : "2 giờ trước",
-    },
-    {
-      number: 98 - i,
-      timestamp: i % 3 === 0 ? "3 giờ trước" : "5 giờ trước",
-    },
-  ],
-}))
-
-const rankedComics = {
-  day: Array.from({ length: 10 }, (_, i) => ({
-    id: i + 1,
-    rank: i + 1,
-    title: i === 0 ? "One Piece" : `Daily Top ${i + 1}`,
-    slug: `daily-top-${i + 1}`,
-    coverImage: "/images/daicongtu.jfif",
-  })),
-  week: Array.from({ length: 10 }, (_, i) => ({
-    id: i + 1,
-    rank: i + 1,
-    title: i === 0 ? "Naruto" : `Weekly Top ${i + 1}`,
-    slug: `weekly-top-${i + 1}`,
-    coverImage: "/images/daicongtu.jfif",
-  })),
-  month: Array.from({ length: 10 }, (_, i) => ({
-    id: i + 1,
-    rank: i + 1,
-    title: i === 0 ? "Attack on Titan" : `Monthly Top ${i + 1}`,
-    slug: `monthly-top-${i + 1}`,
-    coverImage: "/images/daicongtu.jfif",
-  })),
-}
-
 const genres = [
   "Hành động",
   "Lãng mạn",
@@ -167,6 +66,36 @@ const genres = [
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [activeTab, setActiveTab] = useState<"day" | "week" | "month">("day")
+  
+  // State for stories from database
+  const [featuredComics, setFeaturedComics] = useState<Story[]>([])
+  const [newUpdates, setNewUpdates] = useState<Story[]>([])
+  const [topTrending, setTopTrending] = useState<Story[]>([])
+  const [topComics, setTopComics] = useState<Story[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Fetch stories from database
+  useEffect(() => {
+    async function fetchStories() {
+      setIsLoading(true)
+      
+      const [featuredResult, recentResult, topResult, top10Result] = await Promise.all([
+        getRandomStories(12), // Featured comics
+        getRecentlyUpdatedStories(12), // New updates
+        getTopStories(4), // Top trending
+        getTopStories(10), // Top comics list
+      ])
+
+      if (featuredResult.success) setFeaturedComics(featuredResult.stories)
+      if (recentResult.success) setNewUpdates(recentResult.stories)
+      if (topResult.success) setTopTrending(topResult.stories)
+      if (top10Result.success) setTopComics(top10Result.stories)
+      
+      setIsLoading(false)
+    }
+    
+    fetchStories()
+  }, [])
 
   // Auto-slide every 5 seconds
   useEffect(() => {
@@ -290,14 +219,20 @@ export default function HomePage() {
             </section>
 
             {/* Top Trending Section */}
-            <SectionCarousel
-              title="Top Trending"
-              icon={TrendingUp}
-              items={topTrending}
-              renderCard={(comic) => <TrendingCard comic={comic} />}
-              cardWidth="160px"
-              gap="gap-3"
-            />
+            {isLoading ? (
+              <div className="bg-card rounded-lg shadow-md border border-border p-6">
+                <div className="text-center py-12 text-muted-foreground">Đang tải top trending...</div>
+              </div>
+            ) : (
+              <SectionCarousel
+                title="Top Trending"
+                icon={TrendingUp}
+                items={topTrending}
+                renderCard={(comic, index) => <TrendingCard comic={comic} rank={index + 1} />}
+                cardWidth="160px"
+                gap="gap-3"
+              />
+            )}
 
             {/* Featured Tags Section */}
             <section className="space-y-6">
@@ -594,7 +529,7 @@ export default function HomePage() {
 
               {/* Ranking List */}
               <div className="p-4">
-                {rankedComics[activeTab].map((comic, index) => (
+                {topComics.map((comic, index) => (
                   <Link
                     key={comic.id}
                     href={`/truyen/${comic.slug}`}
@@ -615,13 +550,13 @@ export default function HomePage() {
                                 : "bg-muted text-muted-foreground"
                         }`}
                     >
-                      {comic.rank}
+                      {index + 1}
                     </div>
 
                     {/* Small Thumbnail */}
                     <div className="relative w-10 h-14 flex-shrink-0 overflow-hidden rounded bg-muted">
                       <Image
-                        src={comic.coverImage || "/placeholder.svg"}
+                        src={comic.thumbnailUrl || "/placeholder.svg"}
                         alt={comic.title}
                         fill
                         sizes="40px"

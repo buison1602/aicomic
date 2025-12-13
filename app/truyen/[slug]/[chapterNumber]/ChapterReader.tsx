@@ -6,14 +6,26 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, List, Home } from "lucide-react"
 
-interface ChapterPageProps {
-  params: Promise<{
-    slug: string
-    chapterNumber: string
-  }>
+interface Page {
+  id: number
+  pageNumber: number
+  imageUrl: string
 }
 
-function ChapterReader({ slug, chapterNum }: { slug: string; chapterNum: number }) {
+interface Chapter {
+  id: number
+  chapterNumber: number
+}
+
+interface ChapterReaderProps {
+  slug: string
+  chapterNum: number
+  chapter: Chapter
+  pages: Page[]
+  totalChapters: number
+}
+
+export default function ChapterReader({ slug, chapterNum, chapter, pages, totalChapters }: ChapterReaderProps) {
   const [scrollProgress, setScrollProgress] = useState(0)
   const [showControls, setShowControls] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
@@ -100,32 +112,40 @@ function ChapterReader({ slug, chapterNum }: { slug: string; chapterNum: number 
         <div className="max-w-4xl mx-auto px-4">
           {/* Comic Pages - Optimized for Reading */}
           <div className="space-y-2">
-            {Array.from({ length: 10 }, (_, i) => (
-              <div key={i} className="w-full">
-                <div className="relative w-full bg-muted rounded-sm overflow-hidden">
-                  <Image
-                    src="/images/daicongtu.jfif"
-                    alt={`Trang ${i + 1}`}
-                    width={1200}
-                    height={1600}
-                    className="w-full h-auto"
-                    priority={i < 3}
-                    quality={90}
-                  />
+            {pages.length > 0 ? (
+              pages.map((page, index) => (
+                <div key={page.id} className="w-full">
+                  <div className="relative w-full bg-muted rounded-sm overflow-hidden">
+                    <Image
+                      src={page.imageUrl}
+                      alt={`Trang ${page.pageNumber}`}
+                      width={1200}
+                      height={1600}
+                      className="w-full h-auto"
+                      priority={index < 3}
+                      quality={90}
+                    />
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                Chương này chưa có trang nào
               </div>
-            ))}
+            )}
           </div>
 
           {/* End of Chapter Message */}
-          <div className="mt-12 mb-8 text-center space-y-4 py-8 border-t border-border">
-            <p className="text-lg font-medium text-foreground">
-              Hết chương {chapterNum}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Cảm ơn bạn đã đọc
-            </p>
-          </div>
+          {pages.length > 0 && (
+            <div className="mt-12 mb-8 text-center space-y-4 py-8 border-t border-border">
+              <p className="text-lg font-medium text-foreground">
+                Hết chương {chapterNum}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Cảm ơn bạn đã đọc
+              </p>
+            </div>
+          )}
         </div>
       </main>
 
@@ -140,7 +160,7 @@ function ChapterReader({ slug, chapterNum }: { slug: string; chapterNum: number 
             <div className="px-4 py-3 flex items-center justify-between gap-2 sm:gap-4">
               {/* Previous Chapter Button */}
               {chapterNum > 1 ? (
-                <Link href={`/truyen/${slug}/chuong-${chapterNum - 1}`} className="flex-1">
+                <Link href={`/truyen/${slug}/${chapterNum - 1}`} className="flex-1">
                   <Button
                     variant="outline"
                     className="w-full rounded-lg transition-colors duration-200 cursor-pointer hover:bg-secondary"
@@ -165,26 +185,23 @@ function ChapterReader({ slug, chapterNum }: { slug: string; chapterNum: number 
               </Link>
 
               {/* Next Chapter Button */}
-              <Link href={`/truyen/${slug}/chuong-${chapterNum + 1}`} className="flex-1">
-                <Button
-                  className="w-full bg-primary text-primary-foreground rounded-lg transition-colors 
-                    duration-200 cursor-pointer hover:opacity-90"
-                >
-                  <span className="hidden sm:inline">Sau</span>
-                  <ChevronRight className="w-4 h-4 sm:ml-2" />
-                </Button>
-              </Link>
+              {chapterNum < totalChapters ? (
+                <Link href={`/truyen/${slug}/${chapterNum + 1}`} className="flex-1">
+                  <Button
+                    className="w-full bg-primary text-primary-foreground rounded-lg transition-colors 
+                      duration-200 cursor-pointer hover:opacity-90"
+                  >
+                    <span className="hidden sm:inline">Sau</span>
+                    <ChevronRight className="w-4 h-4 sm:ml-2" />
+                  </Button>
+                </Link>
+              ) : (
+                <div className="flex-1" />
+              )}
             </div>
           </div>
         </div>
       </footer>
     </div>
   )
-}
-
-export default async function ChapterReadingPage({ params }: ChapterPageProps) {
-  const { slug, chapterNumber } = await params
-  const chapterNum = Number.parseInt(chapterNumber)
-
-  return <ChapterReader slug={slug} chapterNum={chapterNum} />
 }

@@ -39,3 +39,37 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local uploads (dev only)
+/public/uploads/
+
+# local database
+local.sqlite
+local.sqlite-journal
+local.sqlite-shm
+local.sqlite-wal
+
+# IDE / Editor
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Wrangler (Cloudflare)
+.wrangler/
+.dev.vars
+
+# Temporary files
+*.tmp
+*.temp
+*.log

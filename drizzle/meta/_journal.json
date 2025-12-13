@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1765357092737,
+      "tag": "0000_lovely_harrier",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1765435404466,
+      "tag": "0001_opposite_sway",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1765547383371,
+      "tag": "0002_uneven_vanisher",
+      "breakpoints": true
+    }
+  ]
+}

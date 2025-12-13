@@ -2,34 +2,48 @@ import Link from "next/link"
 import Image from "next/image"
 import { Star, Eye, Clock, Award } from "lucide-react"
 
+// Story type from database
+type Story = {
+  id: number
+  slug: string
+  title: string
+  author: string | null
+  thumbnailUrl: string | null
+  genres: string | null
+  status: string | null
+  chapterCount: number
+}
+
 // Trending Card with Rank Badge
-export function TrendingCard({ comic }: { comic: any }) {
+export function TrendingCard({ comic, rank }: { comic: Story; rank?: number }) {
   return (
     <div className="flex-shrink-0 w-[160px] snap-start group">
       <div className="relative bg-card rounded-lg shadow-md hover:shadow-lg border border-border overflow-hidden transition-all duration-300">
         {/* Rank Badge - Top Left */}
-        <div
-          className="absolute top-1.5 left-1.5 z-20 w-7 h-7 flex items-center justify-center rounded-full font-bold text-sm shadow-lg"
-          style={{
-            background:
-              comic.rank === 1
-                ? "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)"
-                : comic.rank === 2
-                  ? "linear-gradient(135deg, #94a3b8 0%, #64748b 100%)"
-                  : comic.rank === 3
-                    ? "linear-gradient(135deg, #fb923c 0%, #f97316 100%)"
-                    : "linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%)",
-            color: "white",
-          }}
-        >
-          {comic.rank}
-        </div>
+        {rank && (
+          <div
+            className="absolute top-1.5 left-1.5 z-20 w-7 h-7 flex items-center justify-center rounded-full font-bold text-sm shadow-lg"
+            style={{
+              background:
+                rank === 1
+                  ? "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)"
+                  : rank === 2
+                    ? "linear-gradient(135deg, #94a3b8 0%, #64748b 100%)"
+                    : rank === 3
+                      ? "linear-gradient(135deg, #fb923c 0%, #f97316 100%)"
+                      : "linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%)",
+              color: "white",
+            }}
+          >
+            {rank}
+          </div>
+        )}
 
         {/* Cover Image */}
         <Link href={`/truyen/${comic.slug}`} className="block cursor-pointer">
           <div className="aspect-[3/4] relative overflow-hidden bg-muted">
             <Image
-              src={comic.coverImage || "/placeholder.svg"}
+              src={comic.thumbnailUrl || "/placeholder.svg"}
               alt={comic.title}
               fill
               sizes="160px"
@@ -47,19 +61,10 @@ export function TrendingCard({ comic }: { comic: any }) {
             </h3>
           </Link>
 
-          {/* Rating & Views */}
+          {/* Chapter Count & Status */}
           <div className="flex items-center justify-between text-[10px]">
-            {/* Star Rating */}
-            <div className="flex items-center gap-0.5">
-              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-              <span className="font-medium text-foreground">{comic.rating}</span>
-            </div>
-
-            {/* Views */}
-            <div className="flex items-center gap-0.5 text-muted-foreground">
-              <Eye className="w-3 h-3" />
-              <span>{comic.views}</span>
-            </div>
+            <span className="font-medium text-foreground">{comic.chapterCount} chương</span>
+            <span className="text-muted-foreground">{comic.status || "Đang cập nhật"}</span>
           </div>
         </div>
       </div>
@@ -68,14 +73,14 @@ export function TrendingCard({ comic }: { comic: any }) {
 }
 
 // Featured Comic Card
-export function FeaturedCard({ comic }: { comic: any }) {
+export function FeaturedCard({ comic }: { comic: Story }) {
   return (
     <div className="flex-shrink-0 w-[160px] snap-start bg-card rounded-lg shadow-md hover:shadow-lg border border-border overflow-hidden transition-all duration-300 group">
       {/* Cover Image */}
       <Link href={`/truyen/${comic.slug}`} className="block cursor-pointer">
         <div className="aspect-[3/4] relative overflow-hidden bg-muted">
           <Image
-            src={comic.coverImage || "/placeholder.svg"}
+            src={comic.thumbnailUrl || "/placeholder.svg"}
             alt={comic.title}
             fill
             sizes="160px"
@@ -93,8 +98,8 @@ export function FeaturedCard({ comic }: { comic: any }) {
         </Link>
 
         <div className="flex items-center justify-between text-[10px]">
-          <span className="font-medium text-foreground">Ch. {comic.latestChapter}</span>
-          <span className="text-muted-foreground">{comic.timestamp}</span>
+          <span className="font-medium text-foreground">{comic.chapterCount} chương</span>
+          <span className="text-muted-foreground">{comic.author || "Đang cập nhật"}</span>
         </div>
       </div>
     </div>
@@ -102,14 +107,14 @@ export function FeaturedCard({ comic }: { comic: any }) {
 }
 
 // New Updates Card with Chapters
-export function NewUpdatesCard({ comic }: { comic: any }) {
+export function NewUpdatesCard({ comic }: { comic: Story }) {
   return (
     <div className="flex-shrink-0 w-[160px] snap-start bg-card rounded-lg shadow-md hover:shadow-lg border border-border overflow-hidden transition-all duration-300 group">
       {/* Cover Image */}
       <Link href={`/truyen/${comic.slug}`} className="block cursor-pointer">
         <div className="aspect-[3/4] relative overflow-hidden bg-muted">
           <Image
-            src={comic.coverImage || "/placeholder.svg"}
+            src={comic.thumbnailUrl || "/placeholder.svg"}
             alt={comic.title}
             fill
             sizes="160px"
@@ -127,53 +132,25 @@ export function NewUpdatesCard({ comic }: { comic: any }) {
           </h3>
         </Link>
 
-        {/* Rating */}
-        <div className="flex items-center gap-0.5">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Star
-              key={star}
-              className={`w-2.5 h-2.5 ${
-                star <= Math.floor(Number(comic.rating))
-                  ? "fill-yellow-400 text-yellow-400"
-                  : "text-gray-300"
-              }`}
-            />
-          ))}
-          <span className="text-[10px] font-medium text-foreground ml-0.5">{comic.rating}</span>
+        {/* Chapter Count */}
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="font-medium text-foreground">{comic.chapterCount} chương</span>
+          <span className="text-muted-foreground">{comic.status || "Đang cập nhật"}</span>
         </div>
-
-        {/* Chapter Links */}
-        {comic.chapters && (
-          <div className="pt-1.5 border-t border-border space-y-0.5">
-            {comic.chapters.map((chapter: any, index: number) => (
-              <Link
-                key={index}
-                href={`/truyen/${comic.slug}/chuong-${chapter.number}`}
-                className="flex items-center justify-between text-[10px] hover:text-primary transition-colors duration-200 cursor-pointer"
-              >
-                <span className="font-medium text-foreground truncate">Ch {chapter.number}</span>
-                <span className="text-muted-foreground flex items-center gap-0.5 flex-shrink-0">
-                  <Clock className="w-2.5 h-2.5" />
-                  {chapter.timestamp}
-                </span>
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   )
 }
 
 // Recommended Card
-export function RecommendedCard({ comic }: { comic: any }) {
+export function RecommendedCard({ comic }: { comic: Story }) {
   return (
     <div className="flex-shrink-0 w-[160px] snap-start bg-card rounded-lg shadow-md hover:shadow-lg border border-border overflow-hidden transition-all duration-300 group">
       {/* Cover Image */}
       <Link href={`/truyen/${comic.slug}`} className="block cursor-pointer">
         <div className="aspect-[3/4] relative overflow-hidden bg-muted">
           <Image
-            src={comic.coverImage || "/placeholder.svg"}
+            src={comic.thumbnailUrl || "/placeholder.svg"}
             alt={comic.title}
             fill
             sizes="160px"
@@ -191,8 +168,8 @@ export function RecommendedCard({ comic }: { comic: any }) {
         </Link>
 
         <div className="flex items-center justify-between text-[10px]">
-          <span className="font-medium text-foreground">Ch. {comic.latestChapter}</span>
-          <span className="text-muted-foreground">{comic.timestamp}</span>
+          <span className="font-medium text-foreground">{comic.chapterCount} chương</span>
+          <span className="text-muted-foreground">{comic.author || "Đang cập nhật"}</span>
         </div>
       </div>
     </div>
@@ -200,14 +177,14 @@ export function RecommendedCard({ comic }: { comic: any }) {
 }
 
 // Editor's Choice Card with Badge
-export function EditorChoiceCard({ comic }: { comic: any }) {
+export function EditorChoiceCard({ comic }: { comic: Story }) {
   return (
     <div className="flex-shrink-0 w-[160px] snap-start bg-card rounded-lg shadow-md hover:shadow-lg border border-border overflow-hidden transition-all duration-300 group">
       {/* Cover Image */}
       <Link href={`/truyen/${comic.slug}`} className="block cursor-pointer">
         <div className="aspect-[3/4] relative overflow-hidden bg-muted">
           <Image
-            src={comic.coverImage || "/placeholder.svg"}
+            src={comic.thumbnailUrl || "/placeholder.svg"}
             alt={comic.title}
             fill
             sizes="160px"
@@ -230,11 +207,8 @@ export function EditorChoiceCard({ comic }: { comic: any }) {
         </Link>
 
         <div className="flex items-center justify-between text-[10px]">
-          <span className="font-medium text-foreground">Ch. {comic.latestChapter}</span>
-          <span className="text-muted-foreground flex items-center gap-0.5">
-            <Clock className="w-2.5 h-2.5" />
-            {comic.timestamp}
-          </span>
+          <span className="font-medium text-foreground">{comic.chapterCount} chương</span>
+          <span className="text-muted-foreground">{comic.author || "Đang cập nhật"}</span>
         </div>
       </div>
     </div>

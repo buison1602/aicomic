@@ -1,56 +1,62 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Filter, X, Clock, ChevronDown } from "lucide-react"
+import { getAllStories } from "./actions"
 
-// Mock data - Same structure as homepage
-const comics = Array.from({ length: 48 }, (_, i) => ({
-  id: i + 1,
-  title: i === 0 ? "Thiên Ma Quỷ Hoàn" : `Comic Title ${i + 1}`,
-  slug: i === 0 ? "thien-ma-quy-hoan" : `comic-${i + 1}`,
-  coverImage: "/images/daicongtu.jfif",
-  latestChapters: [
-    {
-      number: 25 - i,
-      timestamp:
-        i % 5 === 0
-          ? "0 phút trước"
-          : i % 5 === 1
-            ? "5 phút trước"
-            : i % 5 === 2
-              ? "6 giờ trước"
-              : i % 5 === 3
-                ? "24-11-2025"
-                : "23-11-2025",
-    },
-    {
-      number: 24 - i,
-      timestamp: i % 4 === 0 ? "1 giờ trước" : i % 4 === 1 ? "3 giờ trước" : i % 4 === 2 ? "23-11-2025" : "22-11-2025",
-    },
-  ],
-  genres: ["Action", "Adventure", "Fantasy"].slice(0, Math.floor(Math.random() * 3) + 1),
-}))
+// Story type
+interface Story {
+  id: number
+  title: string
+  slug: string
+  thumbnailUrl: string | null
+  author: string | null
+  description: string | null
+  genres: string[]
+  status: string | null
+  createdAt: string | null
+}
 
-// Filter categories
+// Genre translation mapping
+const genreTranslations: Record<string, string> = {
+  "Action": "Hành động",
+  "Adventure": "Phiêu lưu",
+  "Comedy": "Hài hước",
+  "Drama": "Chính kịch",
+  "Fantasy": "Kỳ ảo",
+  "Horror": "Kinh dị",
+  "Mystery": "Bí ẩn",
+  "Romance": "Lãng mạn",
+  "Sci-Fi": "Khoa học viễn tưởng",
+  "Slice of Life": "Đời thường",
+  "Sports": "Thể thao",
+  "Supernatural": "Siêu nhiên",
+}
+
+// Filter categories (Vietnamese labels, English values for DB compatibility)
 const genres = [
-  "Action",
-  "Adventure",
-  "Comedy",
-  "Drama",
-  "Fantasy",
-  "Horror",
-  "Mystery",
-  "Romance",
-  "Sci-Fi",
-  "Slice of Life",
-  "Sports",
-  "Supernatural",
+  { value: "Action", label: "Hành động" },
+  { value: "Adventure", label: "Phiêu lưu" },
+  { value: "Comedy", label: "Hài hước" },
+  { value: "Drama", label: "Chính kịch" },
+  { value: "Fantasy", label: "Kỳ ảo" },
+  { value: "Horror", label: "Kinh dị" },
+  { value: "Mystery", label: "Bí ẩn" },
+  { value: "Romance", label: "Lãng mạn" },
+  { value: "Sci-Fi", label: "Khoa học viễn tưởng" },
+  { value: "Slice of Life", label: "Đời thường" },
+  { value: "Sports", label: "Thể thao" },
+  { value: "Supernatural", label: "Siêu nhiên" },
 ]
 
-const statuses = ["Đang tiến hành", "Hoàn thành", "Tạm dừng"]
+const statuses = [
+  { value: "ongoing", label: "Đang tiến hành" },
+  { value: "completed", label: "Hoàn thành" },
+  { value: "hiatus", label: "Tạm dừng" },
+]
 
 const sortOptions = [
   { value: "latest", label: "Mới cập nhật" },
@@ -63,6 +69,21 @@ export default function DanhSachPage() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [selectedStatus, setSelectedStatus] = useState<string[]>([])
   const [sortBy, setSortBy] = useState("latest")
+  const [stories, setStories] = useState<Story[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Fetch stories on mount
+  useEffect(() => {
+    async function fetchStories() {
+      setIsLoading(true)
+      const result = await getAllStories()
+      if (result.success) {
+        setStories(result.stories)
+      }
+      setIsLoading(false)
+    }
+    fetchStories()
+  }, [])
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) =>
@@ -79,6 +100,36 @@ export default function DanhSachPage() {
   const clearFilters = () => {
     setSelectedGenres([])
     setSelectedStatus([])
+  }
+
+  // Filter and sort stories
+  const filteredStories = stories.filter((story) => {
+    // Filter by genres
+    if (selectedGenres.length > 0) {
+      const hasMatchingGenre = selectedGenres.some((selectedGenre) =>
+        story.genres.includes(selectedGenre)
+      )
+      if (!hasMatchingGenre) return false
+    }
+
+    // Filter by status
+    if (selectedStatus.length > 0) {
+      if (!story.status || !selectedStatus.includes(story.status)) return false
+    }
+
+    return true
+  })
+
+  if (isLoading) {
+    return (
+      <div className="bg-background min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          <div className="text-center py-12 text-muted-foreground">
+            Đang tải danh sách truyện...
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -147,17 +198,17 @@ export default function DanhSachPage() {
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {genres.map((genre) => (
                     <label
-                      key={genre}
+                      key={genre.value}
                       className="flex items-center gap-2 cursor-pointer group"
                     >
                       <input
                         type="checkbox"
-                        checked={selectedGenres.includes(genre)}
-                        onChange={() => toggleGenre(genre)}
+                        checked={selectedGenres.includes(genre.value)}
+                        onChange={() => toggleGenre(genre.value)}
                         className="w-4 h-4 text-primary border-border rounded cursor-pointer focus:ring-2 focus:ring-ring focus:ring-offset-2"
                       />
                       <span className="text-sm text-foreground group-hover:text-primary transition-colors duration-200">
-                        {genre}
+                        {genre.label}
                       </span>
                     </label>
                   ))}
@@ -170,17 +221,17 @@ export default function DanhSachPage() {
                 <div className="space-y-2">
                   {statuses.map((status) => (
                     <label
-                      key={status}
+                      key={status.value}
                       className="flex items-center gap-2 cursor-pointer group"
                     >
                       <input
                         type="checkbox"
-                        checked={selectedStatus.includes(status)}
-                        onChange={() => toggleStatus(status)}
+                        checked={selectedStatus.includes(status.value)}
+                        onChange={() => toggleStatus(status.value)}
                         className="w-4 h-4 text-primary border-border rounded cursor-pointer focus:ring-2 focus:ring-ring focus:ring-offset-2"
                       />
                       <span className="text-sm text-foreground group-hover:text-primary transition-colors duration-200">
-                        {status}
+                        {status.label}
                       </span>
                     </label>
                   ))}
@@ -272,17 +323,17 @@ export default function DanhSachPage() {
                     <div className="space-y-2">
                       {genres.map((genre) => (
                         <label
-                          key={genre}
+                          key={genre.value}
                           className="flex items-center gap-2 cursor-pointer group"
                         >
                           <input
                             type="checkbox"
-                            checked={selectedGenres.includes(genre)}
-                            onChange={() => toggleGenre(genre)}
+                            checked={selectedGenres.includes(genre.value)}
+                            onChange={() => toggleGenre(genre.value)}
                             className="w-4 h-4 text-primary border-border rounded cursor-pointer focus:ring-2 focus:ring-ring focus:ring-offset-2"
                           />
                           <span className="text-sm text-foreground group-hover:text-primary transition-colors duration-200">
-                            {genre}
+                            {genre.label}
                           </span>
                         </label>
                       ))}
@@ -295,17 +346,17 @@ export default function DanhSachPage() {
                     <div className="space-y-2">
                       {statuses.map((status) => (
                         <label
-                          key={status}
+                          key={status.value}
                           className="flex items-center gap-2 cursor-pointer group"
                         >
                           <input
                             type="checkbox"
-                            checked={selectedStatus.includes(status)}
-                            onChange={() => toggleStatus(status)}
+                            checked={selectedStatus.includes(status.value)}
+                            onChange={() => toggleStatus(status.value)}
                             className="w-4 h-4 text-primary border-border rounded cursor-pointer focus:ring-2 focus:ring-ring focus:ring-offset-2"
                           />
                           <span className="text-sm text-foreground group-hover:text-primary transition-colors duration-200">
-                            {status}
+                            {status.label}
                           </span>
                         </label>
                       ))}
@@ -337,7 +388,7 @@ export default function DanhSachPage() {
                     className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent text-accent-foreground 
                       rounded-lg text-sm font-medium cursor-pointer hover:bg-accent/80 transition-colors duration-200"
                   >
-                    {genre}
+                    {genreTranslations[genre] || genre}
                     <X className="w-3.5 h-3.5" />
                   </button>
                 ))}
@@ -348,7 +399,7 @@ export default function DanhSachPage() {
                     className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent text-accent-foreground 
                       rounded-lg text-sm font-medium cursor-pointer hover:bg-accent/80 transition-colors duration-200"
                   >
-                    {status}
+                    {statuses.find(s => s.value === status)?.label || status}
                     <X className="w-3.5 h-3.5" />
                   </button>
                 ))}
@@ -357,19 +408,20 @@ export default function DanhSachPage() {
 
             {/* Comics Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {comics.map((comic) => (
+              {filteredStories.length > 0 ? (
+                filteredStories.map((story) => (
                 <Link
-                  key={comic.id}
-                  href={`/truyen/${comic.slug}`}
+                  key={story.id}
+                  href={`/truyen/${story.slug}`}
                   className="group cursor-pointer"
                 >
-                  {/* Comic Card - Matching Homepage Style */}
+                  {/* Story Card */}
                   <div className="bg-card rounded-lg shadow-sm hover:shadow-md transition-smooth overflow-hidden">
                     {/* Cover Image */}
                     <div className="aspect-[3/4] relative overflow-hidden bg-muted">
                       <Image
-                        src={comic.coverImage || "/placeholder.svg"}
-                        alt={comic.title}
+                        src={story.thumbnailUrl || "/images/daicongtu.jfif"}
+                        alt={story.title}
                         fill
                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -381,33 +433,45 @@ export default function DanhSachPage() {
                       {/* Title */}
                       <h3 className="font-semibold text-sm text-foreground line-clamp-2 leading-snug 
                         group-hover:text-primary transition-colors duration-200 min-h-[2.5rem]">
-                        {comic.title}
+                        {story.title}
                       </h3>
 
-                      {/* Latest Chapters */}
-                      <div className="space-y-2 text-xs text-muted-foreground">
-                        {/* Chapter 1 */}
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="font-medium">Ch. {comic.latestChapters[0].number}</span>
-                          <span className="flex items-center gap-1 text-[10px] opacity-70">
-                            <Clock className="w-3 h-3" />
-                            {comic.latestChapters[0].timestamp}
+                      {/* Genres */}
+                      <div className="flex flex-wrap gap-1">
+                        {story.genres.slice(0, 2).map((genre) => (
+                          <span 
+                            key={genre}
+                            className="px-2 py-0.5 text-[10px] bg-secondary text-secondary-foreground rounded"
+                          >
+                            {genreTranslations[genre] || genre}
                           </span>
-                        </div>
-
-                        {/* Chapter 2 */}
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="font-medium">Ch. {comic.latestChapters[1].number}</span>
-                          <span className="flex items-center gap-1 text-[10px] opacity-70">
-                            <Clock className="w-3 h-3" />
-                            {comic.latestChapters[1].timestamp}
-                          </span>
-                        </div>
+                        ))}
                       </div>
+
+                      {/* Status */}
+                      {story.status && (
+                        <div className="text-xs text-muted-foreground">
+                          {statuses.find(s => s.value === story.status)?.label || story.status}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>
-              ))}
+              ))
+              ) : (
+                <div className="col-span-full py-12 text-center">
+                  <p className="text-muted-foreground text-lg">
+                    Không tìm thấy truyện nào phù hợp với bộ lọc
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={clearFilters}
+                    className="mt-4"
+                  >
+                    Xóa bộ lọc
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Pagination */}

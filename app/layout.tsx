@@ -6,6 +6,7 @@ import "./globals.css"
 // <CHANGE> Import shared Header and Footer components
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { AuthProvider } from "@/components/auth-provider"
 
 const inter = Inter({ 
   subsets: ["latin", "vietnamese"],
@@ -45,12 +46,14 @@ export default function RootLayout({
   return (
     <html lang="vi" className={inter.variable}>
       <body className="font-sans antialiased flex flex-col min-h-screen bg-white text-gray-800">
-        {/* <CHANGE> Add global Header */}
-        <Header />
-        {/* <CHANGE> Main content wrapper */}
-        <main className="flex-1">{children}</main>
-        {/* <CHANGE> Add global Footer */}
-        <Footer />
+        <AuthProvider>
+          {/* <CHANGE> Add global Header */}
+          <Header />
+          {/* <CHANGE> Main content wrapper */}
+          <main className="flex-1">{children}</main>
+          {/* <CHANGE> Add global Footer */}
+          <Footer />
+        </AuthProvider>
         <Analytics />
       </body>
     </html>
