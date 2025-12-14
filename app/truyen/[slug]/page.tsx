@@ -5,9 +5,11 @@ import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen, User, CheckCircle2, Tag } from "lucide-react"
 import { getStoryBySlug } from "./actions"
 import { notFound } from "next/navigation"
+import { headers } from "next/headers"
 
 // Thêm dòng này để chạy trên Cloudflare Pages
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 interface ComicPageProps {
   params: Promise<{
@@ -16,6 +18,8 @@ interface ComicPageProps {
 }
 
 export default async function ComicDetailPage({ params }: ComicPageProps) {
+  // Force dynamic rendering
+  await headers();
   const { slug } = await params
   
   // Fetch story data from database

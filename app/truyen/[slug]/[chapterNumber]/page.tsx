@@ -1,8 +1,10 @@
 import { getChapterPages } from "./actions"
 import { notFound } from "next/navigation"
 import ChapterReader from "./ChapterReader"
+import { headers } from "next/headers"
 
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -12,6 +14,8 @@ interface ChapterPageProps {
 }
 
 export default async function ChapterReadingPage({ params }: ChapterPageProps) {
+  // Force dynamic rendering
+  await headers();
   const resolvedParams = await params
   console.log('🎬 RAW params object:', resolvedParams)
   console.log('🎬 All params keys:', Object.keys(resolvedParams))
