@@ -3,6 +3,10 @@
 import type React from 'react';
 
 import { useState, useEffect } from 'react';
+
+// Force dynamic rendering for Server Actions
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';

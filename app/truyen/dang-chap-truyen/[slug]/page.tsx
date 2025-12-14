@@ -11,6 +11,7 @@ import { getStoryBySlug, createChapter } from './actions';
 import { compressImages } from '@/lib/image-compression';
 
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 export default function DangChapTruyenPage() {
   const params = useParams();
