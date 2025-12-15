@@ -14,21 +14,9 @@ import { BookPlus, AlertCircle, Check } from 'lucide-react';
 import { LoginDialog } from '@/components/login-dialog';
 import { createStory } from './actions'; // Chỉ giữ createStory
 import { compressImage } from '@/lib/image-compression';
+import { ALL_GENRES } from '@/lib/constants';
 
-const genres = [
-  "Hành động",
-  "Phiêu lưu",
-  "Kinh dị",
-  "Hài hước",
-  "Lãng mạn",
-  "Giả tưởng",
-  "Khoa học viễn tưởng",
-  "Trinh thám",
-  "Học đường",
-  "Drama",
-  "Võ thuật",
-  "Siêu nhiên",
-]
+const genres = ALL_GENRES;
 
 export default function DangTruyenPage() {
   const { data: session, status } = useSession();

@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Filter, X, Clock, ChevronDown } from "lucide-react"
+import { ALL_GENRES } from "@/lib/constants"
 // KHÔNG dùng actions nữa - fetch từ API để giảm bundle
 
 // Story type
@@ -20,44 +21,9 @@ interface Story {
   createdAt: string | null
 }
 
-// Genre translation mapping
-// English to Vietnamese translation
-const genreTranslations: Record<string, string> = {
-  "Action": "Hành động",
-  "Adventure": "Phiêu lưu",
-  "Comedy": "Hài hước",
-  "Drama": "Chính kịch",
-  "Fantasy": "Kỳ ảo",
-  "Horror": "Kinh dị",
-  "Mystery": "Bí ẩn",
-  "Romance": "Lãng mạn",
-  "Sci-Fi": "Khoa học viễn tưởng",
-  "Slice of Life": "Đời thường",
-  "Sports": "Thể thao",
-  "Supernatural": "Siêu nhiên",
-}
-
-// Vietnamese to English reverse mapping (for DB filtering)
-const genreReverseMap: Record<string, string> = Object.entries(genreTranslations).reduce(
-  (acc, [eng, vie]) => ({ ...acc, [vie]: eng }),
-  {} as Record<string, string>
-)
-
-// Filter categories (Vietnamese labels, English values for DB compatibility)
-const genres = [
-  { value: "Action", label: "Hành động" },
-  { value: "Adventure", label: "Phiêu lưu" },
-  { value: "Comedy", label: "Hài hước" },
-  { value: "Drama", label: "Chính kịch" },
-  { value: "Fantasy", label: "Kỳ ảo" },
-  { value: "Horror", label: "Kinh dị" },
-  { value: "Mystery", label: "Bí ẩn" },
-  { value: "Romance", label: "Lãng mạn" },
-  { value: "Sci-Fi", label: "Khoa học viễn tưởng" },
-  { value: "Slice of Life", label: "Đời thường" },
-  { value: "Sports", label: "Thể thao" },
-  { value: "Supernatural", label: "Siêu nhiên" },
-]
+// Sử dụng danh sách thể loại chung từ constants (tiếng Việt)
+// DB lưu tiếng Việt trực tiếp, không cần translation
+const genres = ALL_GENRES.map(genre => ({ value: genre, label: genre }))
 
 const statuses = [
   { value: "ongoing", label: "Đang tiến hành" },
@@ -124,15 +90,11 @@ export default function DanhSachPage() {
         ? story.genres 
         : [];
 
-    // Filter by genres
+    // Filter by genres (DB lưu tiếng Việt trực tiếp)
     if (selectedGenres.length > 0) {
-      const hasMatchingGenre = selectedGenres.some((selectedGenre) => {
-        // selectedGenre là tiếng Anh (ví dụ: "Supernatural")
-        // Chuyển sang tiếng Việt để so sánh với DB
-        const vietnameseName = genreTranslations[selectedGenre];
-        // Kiểm tra cả tiếng Anh và tiếng Việt
-        return genresArray.includes(selectedGenre) || genresArray.includes(vietnameseName);
-      })
+      const hasMatchingGenre = selectedGenres.some((selectedGenre) =>
+        genresArray.includes(selectedGenre)
+      )
       if (!hasMatchingGenre) return false
     }
 
@@ -412,7 +374,7 @@ export default function DanhSachPage() {
                     className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent text-accent-foreground 
                       rounded-lg text-sm font-medium cursor-pointer hover:bg-accent/80 transition-colors duration-200"
                   >
-                    {genreTranslations[genre] || genre}
+                    {genre}
                     <X className="w-3.5 h-3.5" />
                   </button>
                 ))}
@@ -473,7 +435,7 @@ export default function DanhSachPage() {
                               key={genre}
                               className="px-2 py-0.5 text-[10px] bg-secondary text-secondary-foreground rounded"
                             >
-                              {genreTranslations[genre] || genre}
+                              {genre}
                             </span>
                           ));
                         })()}
