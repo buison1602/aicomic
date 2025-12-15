@@ -4,6 +4,9 @@ import { useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import ChapterReader from "./ChapterReader"
 
+// BẮT BUỘC cho dynamic route trên Cloudflare Pages
+export const runtime = 'edge';
+
 export default function ChapterReadingPage() {
   const params = useParams();
   const slug = params.slug as string;
