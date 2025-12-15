@@ -48,6 +48,7 @@ export function TrendingCard({ comic, rank }: { comic: Story; rank?: number }) {
               fill
               sizes="160px"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
+              unoptimized
             />
           </div>
         </Link>

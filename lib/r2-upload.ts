@@ -45,8 +45,9 @@ export async function uploadToR2(file: File, key: string): Promise<string> {
 
     await r2Client.send(command);
 
-    // Xử lý public domain (bỏ dấu / ở cuối nếu có)
+    // Xử lý public domain (bỏ dấu / và space ở cuối nếu có)
     let publicDomain = process.env.R2_PUBLIC_DOMAIN || '';
+    publicDomain = publicDomain.trim(); // Remove trailing spaces
     if (publicDomain.endsWith('/')) {
       publicDomain = publicDomain.slice(0, -1);
     }

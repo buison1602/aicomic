@@ -44,6 +44,7 @@ export default async function ComicDetailPage({ params }: ComicPageProps) {
               fill
               className="object-cover"
               priority
+              unoptimized
             />
           </div>
         </div>
