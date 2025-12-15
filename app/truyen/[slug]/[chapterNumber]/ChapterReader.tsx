@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, List, Home } from "lucide-react"
 
@@ -72,7 +71,7 @@ export default function ChapterReader({ slug, chapterNum, chapter, pages, totalC
           showControls ? "translate-y-0" : "-translate-y-full"
         }`}
       >
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-[800px] mx-auto px-4">
           <div className="bg-card/95 backdrop-blur-sm rounded-lg shadow-md border border-border">
             <div className="px-4 py-3 flex items-center justify-between gap-4">
               {/* Left: Back to Comic */}
@@ -109,21 +108,18 @@ export default function ChapterReader({ slug, chapterNum, chapter, pages, totalC
       {/* Main Reading Area - Distraction-free */}
       <main className="pt-20 pb-24">
         {/* Centered Content Container */}
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-[800px] mx-auto px-4">
           {/* Comic Pages - Optimized for Reading */}
           <div className="space-y-2">
             {pages.length > 0 ? (
               pages.map((page, index) => (
                 <div key={page.id} className="w-full">
                   <div className="relative w-full bg-muted rounded-sm overflow-hidden">
-                    <Image
+                    <img
                       src={page.imageUrl}
                       alt={`Trang ${page.pageNumber}`}
-                      width={1200}
-                      height={1600}
-                      className="w-full h-auto"
-                      priority={index < 3}
-                      quality={90}
+                      className="w-full h-auto block"
+                      loading={index < 3 ? "eager" : "lazy"}
                     />
                   </div>
                 </div>
@@ -155,7 +151,7 @@ export default function ChapterReader({ slug, chapterNum, chapter, pages, totalC
           showControls ? "translate-y-0" : "translate-y-full"
         }`}
       >
-        <div className="max-w-4xl mx-auto px-4 pb-4">
+        <div className="max-w-[800px] mx-auto px-4 pb-4">
           <div className="bg-card/95 backdrop-blur-sm rounded-lg shadow-md border border-border">
             <div className="px-4 py-3 flex items-center justify-between gap-2 sm:gap-4">
               {/* Previous Chapter Button */}
