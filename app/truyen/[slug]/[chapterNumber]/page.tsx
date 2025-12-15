@@ -1,41 +1,46 @@
-import { getChapterPages } from "./actions"
-import { notFound } from "next/navigation"
+'use client';
+
+import { useParams } from "next/navigation"
+import { useState, useEffect } from "react"
 import ChapterReader from "./ChapterReader"
-import { headers } from "next/headers"
 
-export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
+export default function ChapterReadingPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const chapterNumber = params.chapterNumber as string;
+  const chapterNum = parseInt(chapterNumber);
 
-interface ChapterPageProps {
-  params: Promise<{
-    slug: string
-    chapterNumber: string
-  }>
-}
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-export default async function ChapterReadingPage({ params }: ChapterPageProps) {
-  // Force dynamic rendering
-  await headers();
-  const resolvedParams = await params
-  console.log('🎬 RAW params object:', resolvedParams)
-  console.log('🎬 All params keys:', Object.keys(resolvedParams))
-  
-  const { slug, chapterNumber } = resolvedParams
-  console.log('🎬 Extracted:', { slug, chapterNumber })
-  
-  // Parse the chapter number directly (now it's just a number string)
-  const chapterNum = Number.parseInt(chapterNumber)
-  console.log('🔢 Parsed chapterNum:', chapterNum)
+  useEffect(() => {
+    async function fetchChapter() {
+      try {
+        const response = await fetch(`/api/truyen/${slug}/${chapterNumber}`);
+        if (!response.ok) {
+          setError(true);
+          return;
+        }
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        console.error('Error fetching chapter:', err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchChapter();
+  }, [slug, chapterNumber]);
 
-  // Fetch chapter pages from database
-  const { success, chapter, pages, totalChapters } = await getChapterPages(slug, chapterNum)
-
-  console.log('✅ Result:', { success, hasChapter: !!chapter, pagesCount: pages.length, totalChapters })
-
-  if (!success || !chapter) {
-    console.log('⚠️ Calling notFound()')
-    notFound()
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Đang tải...</div>;
   }
 
-  return <ChapterReader slug={slug} chapterNum={chapterNum} chapter={chapter} pages={pages} totalChapters={totalChapters} />
+  if (error || !data) {
+    return <div className="flex items-center justify-center min-h-screen">Không tìm thấy chương</div>;
+  }
+
+  return <ChapterReader slug={slug} chapterNum={chapterNum} chapter={data.chapter} pages={data.pages} totalChapters={data.totalChapters} />
 }
