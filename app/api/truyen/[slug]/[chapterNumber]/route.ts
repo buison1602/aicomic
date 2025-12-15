@@ -1,7 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/db';
-import { chapterPages } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -11,45 +8,54 @@ export async function GET(
   { params }: { params: Promise<{ slug: string; chapterNumber: string }> }
 ) {
   try {
-    const db = getDb();
     const { slug, chapterNumber } = await params;
     const chapterNum = parseFloat(chapterNumber);
 
-    // Get specific chapter directly by story_slug and chapter_number
-    const chapter = (db as any).$client.prepare(
-      'SELECT * FROM chapters WHERE story_slug = ? AND chapter_number = ? LIMIT 1'
-    ).get(slug, chapterNum) as any;
+    // Get DB binding directly from environment
+    const dbBinding = (process.env as any).DB || (globalThis as any).DB;
+    
+    if (!dbBinding) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
 
-    if (!chapter) {
+    // Query chapter directly using D1 SQL API
+    const chapterResult = await dbBinding.prepare(
+      'SELECT * FROM chapters WHERE story_slug = ? AND chapter_number = ? LIMIT 1'
+    ).bind(slug, chapterNum).first();
+
+    if (!chapterResult) {
       return NextResponse.json(
         { error: 'Không tìm thấy chương' },
         { status: 404 }
       );
     }
 
-    // Get total chapters count for navigation
-    const allChapters = (db as any).$client.prepare(
+    // Get total chapters count
+    const countResult = await dbBinding.prepare(
       'SELECT COUNT(*) as count FROM chapters WHERE story_slug = ?'
-    ).get(slug) as any;
+    ).bind(slug).first();
 
-    // Get all pages for this chapter
-    const pages = await db
-      .select()
-      .from(chapterPages)
-      .where(eq(chapterPages.chapterId, chapter.id))
-      .all();
+    // Get all pages for this chapter using D1 SQL API
+    const pagesResult = await dbBinding.prepare(
+      'SELECT * FROM chapter_pages WHERE chapter_id = ? ORDER BY page_number ASC'
+    ).bind(chapterResult.id).all();
+
+    const pages = pagesResult.results || [];
 
     return NextResponse.json({
       chapter: {
-        id: chapter.id,
-        chapterNumber: chapter.chapter_number,
+        id: chapterResult.id,
+        chapterNumber: chapterResult.chapter_number,
       },
       pages: pages.map((page: any) => ({
         id: page.id,
-        pageNumber: page.pageNumber,
-        imageUrl: page.imageUrl,
+        pageNumber: page.page_number,
+        imageUrl: page.image_url,
       })),
-      totalChapters: allChapters?.count || 0,
+      totalChapters: countResult?.count || 0,
     });
   } catch (error) {
     console.error('❌ Error fetching chapter pages:', error);
