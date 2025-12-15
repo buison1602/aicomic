@@ -43,7 +43,7 @@ export function TrendingCard({ comic, rank }: { comic: Story; rank?: number }) {
         <Link href={`/truyen/${comic.slug}`} className="block cursor-pointer">
           <div className="aspect-[3/4] relative overflow-hidden bg-muted">
             <Image
-              src={comic.thumbnailUrl || "/placeholder.svg"}
+              src={(comic.thumbnailUrl || "/placeholder.svg").replace(/\s+/g, '')}
               alt={comic.title}
               fill
               sizes="160px"
@@ -81,11 +81,12 @@ export function FeaturedCard({ comic }: { comic: Story }) {
       <Link href={`/truyen/${comic.slug}`} className="block cursor-pointer">
         <div className="aspect-[3/4] relative overflow-hidden bg-muted">
           <Image
-            src={comic.thumbnailUrl || "/placeholder.svg"}
+            src={(comic.thumbnailUrl || "/placeholder.svg").replace(/\s+/g, '')}
             alt={comic.title}
             fill
             sizes="160px"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
+            unoptimized
           />
         </div>
       </Link>
@@ -115,11 +116,12 @@ export function NewUpdatesCard({ comic }: { comic: Story }) {
       <Link href={`/truyen/${comic.slug}`} className="block cursor-pointer">
         <div className="aspect-[3/4] relative overflow-hidden bg-muted">
           <Image
-            src={comic.thumbnailUrl || "/placeholder.svg"}
+            src={(comic.thumbnailUrl || "/placeholder.svg").replace(/\s+/g, '')}
             alt={comic.title}
             fill
             sizes="160px"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
+            unoptimized
           />
         </div>
       </Link>
@@ -151,11 +153,12 @@ export function RecommendedCard({ comic }: { comic: Story }) {
       <Link href={`/truyen/${comic.slug}`} className="block cursor-pointer">
         <div className="aspect-[3/4] relative overflow-hidden bg-muted">
           <Image
-            src={comic.thumbnailUrl || "/placeholder.svg"}
+            src={(comic.thumbnailUrl || "/placeholder.svg").replace(/\s+/g, '')}
             alt={comic.title}
             fill
             sizes="160px"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
+            unoptimized
           />
         </div>
       </Link>
@@ -185,11 +188,12 @@ export function EditorChoiceCard({ comic }: { comic: Story }) {
       <Link href={`/truyen/${comic.slug}`} className="block cursor-pointer">
         <div className="aspect-[3/4] relative overflow-hidden bg-muted">
           <Image
-            src={comic.thumbnailUrl || "/placeholder.svg"}
+            src={(comic.thumbnailUrl || "/placeholder.svg").replace(/\s+/g, '')}
             alt={comic.title}
             fill
             sizes="160px"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
+            unoptimized
           />
           {/* Editor's Badge */}
           <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-primary/90 rounded-md flex items-center gap-0.5">
