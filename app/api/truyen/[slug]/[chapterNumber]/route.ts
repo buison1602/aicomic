@@ -13,29 +13,24 @@ export async function GET(
   try {
     const db = getDb();
     const { slug, chapterNumber } = await params;
-    const chapterIndex = parseInt(chapterNumber);
+    const chapterNum = parseFloat(chapterNumber);
 
-    // Get all chapters for this story
-    const allChapters = (db as any).$client.prepare(
-      'SELECT * FROM chapters WHERE story_slug = ? ORDER BY chapter_number'
-    ).all(slug) as any[];
+    // Get specific chapter directly by story_slug and chapter_number
+    const chapter = (db as any).$client.prepare(
+      'SELECT * FROM chapters WHERE story_slug = ? AND chapter_number = ? LIMIT 1'
+    ).get(slug, chapterNum) as any;
 
-    if (allChapters.length === 0) {
+    if (!chapter) {
       return NextResponse.json(
         { error: 'Không tìm thấy chương' },
         { status: 404 }
       );
     }
 
-    // Get chapter by index (1-based)
-    const chapter = allChapters[chapterIndex - 1];
-
-    if (!chapter) {
-      return NextResponse.json(
-        { error: 'Số chương không hợp lệ' },
-        { status: 404 }
-      );
-    }
+    // Get total chapters count for navigation
+    const allChapters = (db as any).$client.prepare(
+      'SELECT COUNT(*) as count FROM chapters WHERE story_slug = ?'
+    ).get(slug) as any;
 
     // Get all pages for this chapter
     const pages = await db
@@ -54,7 +49,7 @@ export async function GET(
         pageNumber: page.pageNumber,
         imageUrl: page.imageUrl,
       })),
-      totalChapters: allChapters.length,
+      totalChapters: allChapters?.count || 0,
     });
   } catch (error) {
     console.error('❌ Error fetching chapter pages:', error);
