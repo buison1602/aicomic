@@ -23,7 +23,7 @@ export async function GET() {
     const userStories = await db
       .select()
       .from(stories)
-      .where(eq(stories.userId, session.user.id));
+      .where(eq(stories.creatorId, session.user.id));
 
     return NextResponse.json(userStories);
   } catch (error) {
