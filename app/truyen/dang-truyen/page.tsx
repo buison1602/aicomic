@@ -1,5 +1,11 @@
-import FormDangTruyen from './FormDangTruyen';
 import { headers } from 'next/headers';
+import dynamic from 'next/dynamic';
+
+// Lazy load FormDangTruyen để giảm kích thước Server Function
+const FormDangTruyen = dynamic(() => import('./FormDangTruyen'), { 
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center min-h-screen"><p>Đang tải form...</p></div>
+});
 
 // Cấu hình bắt buộc để chạy trên Cloudflare Pages
 export const runtime = 'edge';

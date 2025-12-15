@@ -1,5 +1,11 @@
-﻿import FormDangChap from './FormDangChap';
-import { headers } from 'next/headers';
+﻿import { headers } from 'next/headers';
+import dynamic from 'next/dynamic';
+
+// Lazy load FormDangChap để giảm kích thước Server Function
+const FormDangChap = dynamic(() => import('./FormDangChap'), { 
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center min-h-screen"><p>Đang tải form...</p></div>
+});
 
 // Cấu hình bắt buộc
 export const runtime = 'edge';
