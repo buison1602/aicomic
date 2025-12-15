@@ -8,11 +8,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const db = getDb();
-    const { slug } = params;
+    const { slug } = await params; // Next.js 15+ requires await
     
     const story = await db
       .select()
