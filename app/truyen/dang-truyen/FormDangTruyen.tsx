@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BookPlus, AlertCircle, Check } from 'lucide-react';
 import { LoginDialog } from '@/components/login-dialog';
-import { createStory, getUserStories } from './actions';
+import { createStory } from './actions'; // Chỉ giữ createStory
 import { compressImage } from '@/lib/image-compression';
 
 const genres = [
@@ -160,15 +160,21 @@ export default function DangTruyenPage() {
   }>>([]);
   const [isLoadingStories, setIsLoadingStories] = useState(true);
 
-  // Fetch user stories on mount
+  // Fetch user stories from API
   useEffect(() => {
     async function fetchStories() {
       setIsLoadingStories(true);
-      const result = await getUserStories();
-      if (result.success) {
-        setUserStories(result.stories);
+      try {
+        const response = await fetch('/api/truyen/user');
+        if (response.ok) {
+          const data = await response.json();
+          setUserStories(data);
+        }
+      } catch (error) {
+        console.error('Error fetching user stories:', error);
+      } finally {
+        setIsLoadingStories(false);
       }
-      setIsLoadingStories(false);
     }
     fetchStories();
   }, []);
@@ -234,10 +240,15 @@ export default function DangTruyenPage() {
         setTouched({});
         setErrors({});
         
-        // Reload stories list
-        const storiesResult = await getUserStories();
-        if (storiesResult.success) {
-          setUserStories(storiesResult.stories);
+        // Reload stories list from API
+        try {
+          const response = await fetch('/api/truyen/user');
+          if (response.ok) {
+            const data = await response.json();
+            setUserStories(data);
+          }
+        } catch (error) {
+          console.error('Error reloading stories:', error);
         }
       } else {
         setSubmitMessage({ type: 'error', text: result.message });

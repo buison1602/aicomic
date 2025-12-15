@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, Upload, X, ImageIcon } from 'lucide-react';
-import { getStoryBySlug, createChapter } from './actions';
+import { createChapter } from './actions'; // Chỉ giữ createChapter
 import { compressImages } from '@/lib/image-compression';
 
 export default function DangChapTruyenPage() {
@@ -31,17 +31,24 @@ export default function DangChapTruyenPage() {
     images?: string;
   }>({});
 
-  // Fetch story info
+  // Fetch story info từ API
   useEffect(() => {
     async function fetchStory() {
       setIsLoadingStory(true);
-      const result = await getStoryBySlug(slug);
-      if (result.success && result.story) {
-        setStory(result.story);
-      } else {
-        setSubmitMessage({ type: 'error', text: 'Không tìm thấy truyện' });
+      try {
+        const response = await fetch(`/api/truyen/${slug}`);
+        if (response.ok) {
+          const data = await response.json();
+          setStory(data);
+        } else {
+          setSubmitMessage({ type: 'error', text: 'Không tìm thấy truyện' });
+        }
+      } catch (error) {
+        console.error('Error fetching story:', error);
+        setSubmitMessage({ type: 'error', text: 'Lỗi tải thông tin truyện' });
+      } finally {
+        setIsLoadingStory(false);
       }
-      setIsLoadingStory(false);
     }
     fetchStory();
   }, [slug]);
