@@ -1,13 +1,8 @@
 import FormTrangChu from './FormTrangChu';
-import { headers } from 'next/headers';
 
-// Cấu hình bắt buộc để tải dữ liệu mới nhất từ Database
-export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
+// XÓA runtime='edge' để giảm bundle size
+// Trang này giờ là Static, data fetch từ Client qua API
 
-export default async function TrangChuPageWrapper() {
-  // Gọi headers() để ép Next.js hiểu đây là Dynamic 100%
-  await headers();
-  
+export default function TrangChuPage() {
   return <FormTrangChu />;
 }

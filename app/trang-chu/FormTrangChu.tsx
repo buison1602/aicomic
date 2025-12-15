@@ -13,7 +13,7 @@ import {
   RecommendedCard,
   EditorChoiceCard,
 } from "@/components/comic-cards"
-import { getRandomStories, getRecentlyUpdatedStories, getTopStories } from "./actions"
+// KHÔNG dùng actions nữa, chuyển sang fetch API để giảm bundle
 
 // Types for stories from database
 type Story = {
@@ -74,24 +74,26 @@ export default function HomePage() {
   const [topComics, setTopComics] = useState<Story[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Fetch stories from database
+  // Fetch stories from API (giảm bundle server)
   useEffect(() => {
     async function fetchStories() {
       setIsLoading(true)
       
-      const [featuredResult, recentResult, topResult, top10Result] = await Promise.all([
-        getRandomStories(12), // Featured comics
-        getRecentlyUpdatedStories(12), // New updates
-        getTopStories(4), // Top trending
-        getTopStories(10), // Top comics list
-      ])
-
-      if (featuredResult.success) setFeaturedComics(featuredResult.stories)
-      if (recentResult.success) setNewUpdates(recentResult.stories)
-      if (topResult.success) setTopTrending(topResult.stories)
-      if (top10Result.success) setTopComics(top10Result.stories)
-      
-      setIsLoading(false)
+      try {
+        const response = await fetch('/api/truyen/trending')
+        if (response.ok) {
+          const stories = await response.json()
+          // Phân bố stories cho các section
+          setFeaturedComics(stories.slice(0, 12))
+          setNewUpdates(stories.slice(0, 12))
+          setTopTrending(stories.slice(0, 4))
+          setTopComics(stories.slice(0, 10))
+        }
+      } catch (error) {
+        console.error('Error fetching stories:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
     
     fetchStories()

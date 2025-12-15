@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Filter, X, Clock, ChevronDown } from "lucide-react"
-import { getAllStories } from "./actions"
+// KHÔNG dùng actions nữa - fetch từ API để giảm bundle
 
 // Story type
 interface Story {
@@ -72,15 +72,21 @@ export default function DanhSachPage() {
   const [stories, setStories] = useState<Story[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Fetch stories on mount
+  // Fetch stories from API (giảm bundle)
   useEffect(() => {
     async function fetchStories() {
       setIsLoading(true)
-      const result = await getAllStories()
-      if (result.success) {
-        setStories(result.stories)
+      try {
+        const response = await fetch('/api/truyen/all')
+        if (response.ok) {
+          const data = await response.json()
+          setStories(data)
+        }
+      } catch (error) {
+        console.error('Error fetching stories:', error)
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
     fetchStories()
   }, [])
