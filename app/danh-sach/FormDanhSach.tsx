@@ -15,7 +15,7 @@ interface Story {
   thumbnailUrl: string | null
   author: string | null
   description: string | null
-  genres: string[]
+  genres: string | string[] | null  // Có thể là string ("A,B,C") hoặc array
   status: string | null
   createdAt: string | null
 }
@@ -110,10 +110,17 @@ export default function DanhSachPage() {
 
   // Filter and sort stories
   const filteredStories = stories.filter((story) => {
+    // Chuyển genres từ string sang array nếu cần
+    const genresArray = typeof story.genres === 'string'
+      ? story.genres.split(',').map(g => g.trim()).filter(g => g.length > 0)
+      : Array.isArray(story.genres) 
+        ? story.genres 
+        : [];
+
     // Filter by genres
     if (selectedGenres.length > 0) {
       const hasMatchingGenre = selectedGenres.some((selectedGenre) =>
-        story.genres.includes(selectedGenre)
+        genresArray.includes(selectedGenre)
       )
       if (!hasMatchingGenre) return false
     }
@@ -444,14 +451,21 @@ export default function DanhSachPage() {
 
                       {/* Genres */}
                       <div className="flex flex-wrap gap-1">
-                        {story.genres.slice(0, 2).map((genre) => (
-                          <span 
-                            key={genre}
-                            className="px-2 py-0.5 text-[10px] bg-secondary text-secondary-foreground rounded"
-                          >
-                            {genreTranslations[genre] || genre}
-                          </span>
-                        ))}
+                        {(() => {
+                          const genresArray = typeof story.genres === 'string'
+                            ? story.genres.split(',').map(g => g.trim()).filter(g => g.length > 0)
+                            : Array.isArray(story.genres) 
+                              ? story.genres 
+                              : [];
+                          return genresArray.slice(0, 2).map((genre) => (
+                            <span 
+                              key={genre}
+                              className="px-2 py-0.5 text-[10px] bg-secondary text-secondary-foreground rounded"
+                            >
+                              {genreTranslations[genre] || genre}
+                            </span>
+                          ));
+                        })()}
                       </div>
 
                       {/* Status */}
