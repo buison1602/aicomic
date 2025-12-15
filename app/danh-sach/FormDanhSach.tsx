@@ -21,6 +21,7 @@ interface Story {
 }
 
 // Genre translation mapping
+// English to Vietnamese translation
 const genreTranslations: Record<string, string> = {
   "Action": "Hành động",
   "Adventure": "Phiêu lưu",
@@ -35,6 +36,12 @@ const genreTranslations: Record<string, string> = {
   "Sports": "Thể thao",
   "Supernatural": "Siêu nhiên",
 }
+
+// Vietnamese to English reverse mapping (for DB filtering)
+const genreReverseMap: Record<string, string> = Object.entries(genreTranslations).reduce(
+  (acc, [eng, vie]) => ({ ...acc, [vie]: eng }),
+  {} as Record<string, string>
+)
 
 // Filter categories (Vietnamese labels, English values for DB compatibility)
 const genres = [
@@ -119,9 +126,13 @@ export default function DanhSachPage() {
 
     // Filter by genres
     if (selectedGenres.length > 0) {
-      const hasMatchingGenre = selectedGenres.some((selectedGenre) =>
-        genresArray.includes(selectedGenre)
-      )
+      const hasMatchingGenre = selectedGenres.some((selectedGenre) => {
+        // selectedGenre là tiếng Anh (ví dụ: "Supernatural")
+        // Chuyển sang tiếng Việt để so sánh với DB
+        const vietnameseName = genreTranslations[selectedGenre];
+        // Kiểm tra cả tiếng Anh và tiếng Việt
+        return genresArray.includes(selectedGenre) || genresArray.includes(vietnameseName);
+      })
       if (!hasMatchingGenre) return false
     }
 
