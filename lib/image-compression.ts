@@ -32,7 +32,21 @@ export async function compressImage(
     console.log(`   Compressed size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
     console.log(`   Reduction: ${((1 - compressedFile.size / file.size) * 100).toFixed(1)}%`);
 
-    return compressedFile;
+    // Preserve original filename to keep extension
+    // browser-image-compression may return generic name like "image.blob"
+    const originalExt = file.name.split('.').pop() || 'jpg';
+    const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+    const properName = compressedFile.name.endsWith(`.${originalExt}`) 
+      ? compressedFile.name 
+      : `${nameWithoutExt}.${originalExt}`;
+    
+    // Create new File object with proper name
+    const renamedFile = new File([compressedFile], properName, {
+      type: compressedFile.type || file.type,
+      lastModified: Date.now(),
+    });
+
+    return renamedFile;
   } catch (error) {
     console.error('❌ Compression failed:', error);
     // Return original file if compression fails
